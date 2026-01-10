@@ -15,15 +15,19 @@ import org.springframework.http.ResponseEntity;
 import java.util.Collections;
 import java.util.UUID;
 
+import org.springframework.web.client.HttpClientErrorException;
+
 import static org.assertj.core.api.Assertions.assertThat;
-
-
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ZikresourceControllerTest {
 
     @org.springframework.boot.test.web.server.LocalServerPort
     private int port;
+
+    @Autowired
+    private com.zikstock.demo.spring.boot.domain.out.ZikresourceRepository repository;
 
     private org.springframework.web.client.RestTemplate restTemplate;
     private String baseUrl;
@@ -32,6 +36,11 @@ class ZikresourceControllerTest {
     void setUp() {
         restTemplate = new org.springframework.web.client.RestTemplate();
         baseUrl = "http://localhost:" + port + "/api/zikresources";
+        
+        // Clear repository
+        repository.findAll().forEach(z -> 
+            repository.delete(new com.zikstock.demo.spring.boot.domain.model.ZikresourceIdentifier(z.id()))
+        );
     }
 
     @Test
@@ -57,13 +66,24 @@ class ZikresourceControllerTest {
 
     @Test
     void should_return_Zikresource_by_id() {
-        var id = UUID.randomUUID();
+        // Given
+        var request = new ZikresourceRequest(
+                "https://example.com/tool",
+                "Tool",
+                "Sober",
+                "video",
+                Collections.emptyList(),
+                new AddedByDto("tool@fan.com", "Fan", "/users/fan")
+        );
+        var created = restTemplate.postForEntity(baseUrl, request, ZikresourceResponse.class).getBody();
 
-        var response = restTemplate.getForEntity(baseUrl + "/{id}", ZikresourceResponse.class, id);
+        // When
+        var response = restTemplate.getForEntity(baseUrl + "/{id}", ZikresourceResponse.class, created.id());
 
+        // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().id()).isEqualTo(id);
+        assertThat(response.getBody().id()).isEqualTo(created.id());
         assertThat(response.getBody().artist()).isEqualTo("Tool");
         assertThat(response.getBody().title()).isEqualTo("Sober");
     }
@@ -79,8 +99,18 @@ class ZikresourceControllerTest {
 
     @Test
     void should_return_updated_Zikresource() {
-        var id = UUID.randomUUID();
+        // Given
         var request = new ZikresourceRequest(
+                "https://example.com/old",
+                "Old Artist",
+                "Old Title",
+                "video",
+                Collections.emptyList(),
+                new AddedByDto("user@test", "User", "/users/1")
+        );
+        var created = restTemplate.postForEntity(baseUrl, request, ZikresourceResponse.class).getBody();
+
+        var updateRequest = new ZikresourceRequest(
                 "https://www.updated.com",
                 "Updated Artist",
                 "Updated Title",
@@ -89,22 +119,40 @@ class ZikresourceControllerTest {
                 new AddedByDto("user@test", "User", "/users/1")
         );
 
-        var requestEntity = new HttpEntity<>(request);
-        var response = restTemplate.exchange(baseUrl + "/{id}", HttpMethod.PUT, requestEntity, ZikresourceResponse.class, id);
+        // When
+        var requestEntity = new HttpEntity<>(updateRequest);
+        var response = restTemplate.exchange(baseUrl + "/{id}", HttpMethod.PUT, requestEntity, ZikresourceResponse.class, created.id());
 
+        // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().id()).isEqualTo(id);
-        assertThat(response.getBody().artist()).isEqualTo(request.artist());
-        assertThat(response.getBody().title()).isEqualTo(request.title());
+        assertThat(response.getBody().id()).isEqualTo(created.id());
+        assertThat(response.getBody().artist()).isEqualTo("Updated Artist");
+        assertThat(response.getBody().title()).isEqualTo("Updated Title");
     }
 
     @Test
     void should_return_no_content_on_delete() {
-        var id = UUID.randomUUID();
+        // Given
+        var request = new ZikresourceRequest(
+                "https://example.com/delete",
+                "Delete Me",
+                "Delete Title",
+                "video",
+                Collections.emptyList(),
+                new AddedByDto("user@test", "User", "/users/1")
+        );
+        var created = restTemplate.postForEntity(baseUrl, request, ZikresourceResponse.class).getBody();
 
-        var response = restTemplate.exchange(baseUrl + "/{id}", HttpMethod.DELETE, null, Void.class, id);
+        // When
+        var response = restTemplate.exchange(baseUrl + "/{id}", HttpMethod.DELETE, null, Void.class, created.id());
 
+        // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        
+        // Verify it is gone
+        assertThatThrownBy(() -> 
+            restTemplate.getForEntity(baseUrl + "/{id}", ZikresourceResponse.class, created.id())
+        ).isInstanceOf(HttpClientErrorException.NotFound.class);
     }
 }
