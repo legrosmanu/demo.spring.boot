@@ -1,20 +1,20 @@
+package com.zikstock.demo.spring.boot.infrastructure.in.rest;
+
 import com.zikstock.demo.spring.boot.Application;
+import com.zikstock.demo.spring.boot.domain.model.ZikresourceIdentifier;
+import com.zikstock.demo.spring.boot.domain.out.ZikresourceRepository;
 import com.zikstock.demo.spring.boot.infrastructure.in.rest.dto.ZikresourceRequest;
 import com.zikstock.demo.spring.boot.infrastructure.in.rest.dto.ZikresourceRequest.AddedByDto;
-import com.zikstock.demo.spring.boot.infrastructure.in.rest.dto.ZikresourceRequest.TagDto;
 import com.zikstock.demo.spring.boot.infrastructure.in.rest.dto.ZikresourceResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-
 import java.util.Collections;
-import java.util.UUID;
-
 import org.springframework.web.client.HttpClientErrorException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,7 +27,7 @@ class ZikresourceControllerTest {
     private int port;
 
     @Autowired
-    private com.zikstock.demo.spring.boot.domain.out.ZikresourceRepository repository;
+    private ZikresourceRepository repository;
 
     private org.springframework.web.client.RestTemplate restTemplate;
     private String baseUrl;
@@ -36,11 +36,10 @@ class ZikresourceControllerTest {
     void setUp() {
         restTemplate = new org.springframework.web.client.RestTemplate();
         baseUrl = "http://localhost:" + port + "/api/zikresources";
-        
+
         // Clear repository
-        repository.findAll().forEach(z -> 
-            repository.delete(new com.zikstock.demo.spring.boot.domain.model.ZikresourceIdentifier(z.id()))
-        );
+        repository.findAll().forEach(
+                z -> repository.delete(new ZikresourceIdentifier(z.id())));
     }
 
     @Test
@@ -51,8 +50,7 @@ class ZikresourceControllerTest {
                 "Never Gonna Give You Up",
                 "video",
                 Collections.emptyList(),
-                new AddedByDto("rick@roll.com", "Rick", "/users/rick")
-        );
+                new AddedByDto("rick@roll.com", "Rick", "/users/rick"));
 
         var response = restTemplate.postForEntity(baseUrl, request, ZikresourceResponse.class);
 
@@ -73,8 +71,7 @@ class ZikresourceControllerTest {
                 "Sober",
                 "video",
                 Collections.emptyList(),
-                new AddedByDto("tool@fan.com", "Fan", "/users/fan")
-        );
+                new AddedByDto("tool@fan.com", "Fan", "/users/fan"));
         var created = restTemplate.postForEntity(baseUrl, request, ZikresourceResponse.class).getBody();
 
         // When
@@ -106,8 +103,7 @@ class ZikresourceControllerTest {
                 "Old Title",
                 "video",
                 Collections.emptyList(),
-                new AddedByDto("user@test", "User", "/users/1")
-        );
+                new AddedByDto("user@test", "User", "/users/1"));
         var created = restTemplate.postForEntity(baseUrl, request, ZikresourceResponse.class).getBody();
 
         var updateRequest = new ZikresourceRequest(
@@ -116,12 +112,12 @@ class ZikresourceControllerTest {
                 "Updated Title",
                 "tablature",
                 Collections.emptyList(),
-                new AddedByDto("user@test", "User", "/users/1")
-        );
+                new AddedByDto("user@test", "User", "/users/1"));
 
         // When
         var requestEntity = new HttpEntity<>(updateRequest);
-        var response = restTemplate.exchange(baseUrl + "/{id}", HttpMethod.PUT, requestEntity, ZikresourceResponse.class, created.id());
+        var response = restTemplate.exchange(baseUrl + "/{id}", HttpMethod.PUT, requestEntity,
+                ZikresourceResponse.class, created.id());
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -140,8 +136,7 @@ class ZikresourceControllerTest {
                 "Delete Title",
                 "video",
                 Collections.emptyList(),
-                new AddedByDto("user@test", "User", "/users/1")
-        );
+                new AddedByDto("user@test", "User", "/users/1"));
         var created = restTemplate.postForEntity(baseUrl, request, ZikresourceResponse.class).getBody();
 
         // When
@@ -149,10 +144,32 @@ class ZikresourceControllerTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-        
+
         // Verify it is gone
-        assertThatThrownBy(() -> 
-            restTemplate.getForEntity(baseUrl + "/{id}", ZikresourceResponse.class, created.id())
-        ).isInstanceOf(HttpClientErrorException.NotFound.class);
+        assertThatThrownBy(() -> restTemplate.getForEntity(baseUrl + "/{id}", ZikresourceResponse.class, created.id()))
+                .isInstanceOf(HttpClientErrorException.NotFound.class);
+    }
+
+    @Test
+    void should_return_formatted_error_when_request_is_invalid() {
+        // Given
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        HttpEntity<String> request = new HttpEntity<>("", headers); // Empty body to trigger error
+
+        // When
+        try {
+            restTemplate.postForEntity(baseUrl, request, ZikresourceResponse.class);
+        } catch (HttpClientErrorException.BadRequest ex) {
+            // Then
+            assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            var responseBody = ex
+                    .getResponseBodyAs(com.zikstock.demo.spring.boot.infrastructure.in.rest.exception.ApiError.class);
+            assertThat(responseBody).isNotNull();
+            assertThat(responseBody.status()).isEqualTo(400);
+            assertThat(responseBody.error()).isEqualTo("Bad Request");
+            assertThat(responseBody.message()).contains("Required request body is missing");
+            assertThat(responseBody.timestamp()).isNotNull();
+        }
     }
 }

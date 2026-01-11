@@ -2,7 +2,6 @@ package com.zikstock.demo.spring.boot.infrastructure.in.rest.mapper;
 
 import com.zikstock.demo.spring.boot.domain.model.Zikresource;
 import com.zikstock.demo.spring.boot.infrastructure.in.rest.dto.ZikresourceRequest;
-import com.zikstock.demo.spring.boot.infrastructure.in.rest.dto.ZikresourceResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,8 +30,7 @@ class ZikresourceMapperTest {
                 "Song Title",
                 "VIDEO",
                 List.of(new ZikresourceRequest.TagDto("genre", "rock")),
-                new ZikresourceRequest.AddedByDto("user@example.com", "User", "/users/1")
-        );
+                new ZikresourceRequest.AddedByDto("user@example.com", "User", "/users/1"));
 
         // When
         var result = mapper.toDomain(request, id);
@@ -73,8 +71,7 @@ class ZikresourceMapperTest {
                 "Title",
                 "VIDEO",
                 null,
-                null
-        );
+                null);
 
         // When
         var result = mapper.toDomain(request, id);
@@ -96,8 +93,7 @@ class ZikresourceMapperTest {
                 "Song Title",
                 "VIDEO",
                 List.of(new Zikresource.Tag("genre", "rock")),
-                new Zikresource.AddedBy("user@example.com", "User", "/users/1")
-        );
+                new Zikresource.AddedBy("user@example.com", "User", "/users/1"));
 
         // When
         var result = mapper.toResponse(domain);
@@ -139,8 +135,7 @@ class ZikresourceMapperTest {
                 "Title",
                 "VIDEO",
                 null,
-                null
-        );
+                null);
 
         // When
         var result = mapper.toResponse(domain);
@@ -161,8 +156,7 @@ class ZikresourceMapperTest {
                 "Title",
                 "VIDEO",
                 Collections.emptyList(),
-                new ZikresourceRequest.AddedByDto("user@example.com", "User", "/users/1")
-        );
+                new ZikresourceRequest.AddedByDto("user@example.com", "User", "/users/1"));
 
         // When
         var result = mapper.toDomain(request, id);

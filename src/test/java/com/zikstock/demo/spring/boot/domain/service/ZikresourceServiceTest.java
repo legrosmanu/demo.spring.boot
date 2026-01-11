@@ -13,7 +13,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.zikstock.demo.spring.boot.domain.exception.ZikresourceNotFound;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -97,18 +100,17 @@ class ZikresourceServiceTest {
         // Then
         assertThat(result).isEqualTo(zikresource);
     }
-    
+
     @Test
-    void should_return_null_when_zikresource_not_found() {
+    void should_throw_exception_when_zikresource_not_found() {
         // Given
         var id = UUID.randomUUID();
         var identifier = new ZikresourceIdentifier(id);
         given(repository.findById(identifier)).willReturn(Optional.empty());
 
-        // When
-        var result = service.getZikresource(identifier);
-
-        // Then
-        assertThat(result).isNull();
+        // When / Then
+        assertThatThrownBy(() -> service.getZikresource(identifier))
+                .isInstanceOf(ZikresourceNotFound.class)
+                .hasMessage("Zikresource with id " + id + " not found");
     }
 }

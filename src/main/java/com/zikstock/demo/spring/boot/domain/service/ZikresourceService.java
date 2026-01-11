@@ -2,6 +2,7 @@ package com.zikstock.demo.spring.boot.domain.service;
 
 import com.zikstock.demo.spring.boot.domain.in.ZikresourceCommand;
 import com.zikstock.demo.spring.boot.domain.in.ZikresourceQuery;
+import com.zikstock.demo.spring.boot.domain.exception.ZikresourceNotFound;
 import com.zikstock.demo.spring.boot.domain.model.Zikresource;
 import com.zikstock.demo.spring.boot.domain.model.ZikresourceIdentifier;
 import com.zikstock.demo.spring.boot.domain.out.ZikresourceRepository;
@@ -40,6 +41,6 @@ public class ZikresourceService implements ZikresourceCommand, ZikresourceQuery 
 
     @Override
     public Zikresource getZikresource(ZikresourceIdentifier id) {
-        return zikresourceRepository.findById(id).orElse(null);
+        return zikresourceRepository.findById(id).orElseThrow(() -> new ZikresourceNotFound(id));
     }
 }
