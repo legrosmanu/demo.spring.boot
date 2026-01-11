@@ -50,6 +50,7 @@ class ZikresourceServiceTest {
     void should_update_zikresource() {
         // Given
         var zikresource = mock(Zikresource.class);
+        given(repository.findById(new ZikresourceIdentifier(zikresource.id()))).willReturn(Optional.of(zikresource));
 
         // When
         service.update(zikresource);
@@ -62,14 +63,14 @@ class ZikresourceServiceTest {
     void should_delete_zikresource() {
         // Given
         var id = UUID.randomUUID();
-        var zikresource = mock(Zikresource.class);
-        given(zikresource.id()).willReturn(id);
+        var zikresourceIdentifier = new ZikresourceIdentifier(id);
+        given(repository.findById(zikresourceIdentifier)).willReturn(Optional.of(mock(Zikresource.class)));
 
         // When
-        service.delete(zikresource);
+        service.delete(zikresourceIdentifier);
 
         // Then
-        then(repository).should().delete(new ZikresourceIdentifier(id));
+        then(repository).should().delete(zikresourceIdentifier);
     }
 
     @Test
@@ -112,5 +113,34 @@ class ZikresourceServiceTest {
         assertThatThrownBy(() -> service.getZikresource(identifier))
                 .isInstanceOf(ZikresourceNotFound.class)
                 .hasMessage("Zikresource with id " + id + " not found");
+    }
+
+    @Test
+    void should_throw_exception_when_updating_non_existent_zikresource() {
+        // Given
+        var id = UUID.randomUUID();
+        var zikresource = mock(Zikresource.class);
+        given(zikresource.id()).willReturn(id);
+        given(repository.findById(new ZikresourceIdentifier(id))).willReturn(Optional.empty());
+
+        // When / Then
+        assertThatThrownBy(() -> service.update(zikresource))
+                .isInstanceOf(ZikresourceNotFound.class)
+                .hasMessage("Zikresource with id " + id + " not found");
+    }
+
+    @Test
+    void should_do_nothing_when_deleting_non_existent_zikresource() {
+        // Given
+        var id = UUID.randomUUID();
+        var identifier = new ZikresourceIdentifier(id);
+        given(repository.findById(identifier)).willReturn(Optional.empty());
+
+        // When
+        service.delete(identifier);
+
+        // Then
+        then(repository).should().findById(identifier);
+        then(repository).shouldHaveNoMoreInteractions();
     }
 }

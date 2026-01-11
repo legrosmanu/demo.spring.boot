@@ -23,8 +23,8 @@ public class ZikresourceController {
     private final ZikresourceMapper zikresourceMapper;
 
     public ZikresourceController(ZikresourceCommand zikresourceCommand,
-                                 ZikresourceQuery zikresourceQuery,
-                                 ZikresourceMapper zikresourceMapper) {
+            ZikresourceQuery zikresourceQuery,
+            ZikresourceMapper zikresourceMapper) {
         this.zikresourceCommand = zikresourceCommand;
         this.zikresourceQuery = zikresourceQuery;
         this.zikresourceMapper = zikresourceMapper;
@@ -40,9 +40,6 @@ public class ZikresourceController {
     @GetMapping("/{id}")
     public ResponseEntity<ZikresourceResponse> getById(@PathVariable UUID id) {
         var domainObject = zikresourceQuery.getZikresource(new ZikresourceIdentifier(id));
-        if (domainObject == null) {
-            return ResponseEntity.notFound().build();
-        }
         return ResponseEntity.ok(zikresourceMapper.toResponse(domainObject));
     }
 
@@ -58,25 +55,13 @@ public class ZikresourceController {
     @PutMapping("/{id}")
     public ResponseEntity<ZikresourceResponse> update(@PathVariable UUID id, @RequestBody ZikresourceRequest request) {
         var domainObject = zikresourceMapper.toDomain(request, id);
-        // Ensure availability before update? Or just update. 
-        // Assuming update implies existence check in domain or we check here.
-        // For REST, usually we check if exists.
-        var existing = zikresourceQuery.getZikresource(new ZikresourceIdentifier(id));
-        if (existing == null) {
-            return ResponseEntity.notFound().build();
-        }
-        
         zikresourceCommand.update(domainObject);
         return ResponseEntity.ok(zikresourceMapper.toResponse(domainObject));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        var existing = zikresourceQuery.getZikresource(new ZikresourceIdentifier(id));
-        if (existing == null) {
-            return ResponseEntity.notFound().build();
-        }
-        zikresourceCommand.delete(existing);
+        zikresourceCommand.delete(new ZikresourceIdentifier(id));
         return ResponseEntity.noContent().build();
     }
 }

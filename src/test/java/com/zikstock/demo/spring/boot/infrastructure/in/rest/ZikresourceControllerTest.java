@@ -172,4 +172,47 @@ class ZikresourceControllerTest {
             assertThat(responseBody.timestamp()).isNotNull();
         }
     }
+
+    @Test
+    void should_return_not_found_when_updating_non_existent_zikresource() {
+        // Given
+        var id = java.util.UUID.randomUUID();
+        var updateRequest = new ZikresourceRequest(
+                "https://www.updated.com",
+                "Updated Artist",
+                "Updated Title",
+                "tablature",
+                Collections.emptyList(),
+                new AddedByDto("user@test", "User", "/users/1"));
+
+        var requestEntity = new HttpEntity<>(updateRequest);
+
+        // When
+        try {
+            restTemplate.exchange(baseUrl + "/{id}", HttpMethod.PUT, requestEntity,
+                    ZikresourceResponse.class, id);
+        } catch (HttpClientErrorException.NotFound ex) {
+            // Then
+            assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            var responseBody = ex
+                    .getResponseBodyAs(com.zikstock.demo.spring.boot.infrastructure.in.rest.exception.ApiError.class);
+            assertThat(responseBody).isNotNull();
+            assertThat(responseBody.status()).isEqualTo(404);
+            assertThat(responseBody.error()).isEqualTo("Not Found");
+            assertThat(responseBody.message()).isEqualTo("Zikresource with id " + id + " not found");
+            assertThat(responseBody.timestamp()).isNotNull();
+        }
+    }
+
+    @Test
+    void should_return_no_content_when_deleting_non_existent_zikresource() {
+        // Given
+        var id = java.util.UUID.randomUUID();
+
+        // When
+        var response = restTemplate.exchange(baseUrl + "/{id}", HttpMethod.DELETE, null, Void.class, id);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    }
 }

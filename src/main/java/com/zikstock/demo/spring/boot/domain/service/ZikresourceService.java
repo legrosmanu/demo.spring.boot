@@ -26,12 +26,18 @@ public class ZikresourceService implements ZikresourceCommand, ZikresourceQuery 
 
     @Override
     public void update(Zikresource zikresource) {
+        if (!exists(new ZikresourceIdentifier(zikresource.id()))) {
+            throw new ZikresourceNotFound(new ZikresourceIdentifier(zikresource.id()));
+        }
         zikresourceRepository.save(zikresource);
     }
 
     @Override
-    public void delete(Zikresource zikresource) {
-        zikresourceRepository.delete(new ZikresourceIdentifier(zikresource.id()));
+    public void delete(ZikresourceIdentifier zikresourceIdentifier) {
+        if (!exists(zikresourceIdentifier)) {
+            return;
+        }
+        zikresourceRepository.delete(zikresourceIdentifier);
     }
 
     @Override
@@ -42,5 +48,9 @@ public class ZikresourceService implements ZikresourceCommand, ZikresourceQuery 
     @Override
     public Zikresource getZikresource(ZikresourceIdentifier id) {
         return zikresourceRepository.findById(id).orElseThrow(() -> new ZikresourceNotFound(id));
+    }
+
+    private boolean exists(ZikresourceIdentifier id) {
+        return zikresourceRepository.findById(id).isPresent();
     }
 }

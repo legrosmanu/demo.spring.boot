@@ -1,6 +1,7 @@
 package com.zikstock.demo.spring.boot.domain.in;
 
 import com.zikstock.demo.spring.boot.domain.model.Zikresource;
+import com.zikstock.demo.spring.boot.domain.model.ZikresourceIdentifier;
 
 public interface ZikresourceCommand {
 
@@ -8,6 +9,6 @@ public interface ZikresourceCommand {
 
     void update(Zikresource zikresource);
 
-    void delete(Zikresource zikresource);
+    void delete(ZikresourceIdentifier zikresourceIdentifier);
 
 }
