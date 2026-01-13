@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import com.zikstock.demo.spring.boot.domain.exception.InvalidZikresourceException;
 import com.zikstock.demo.spring.boot.domain.exception.ZikresourceNotFound;
 
 import java.time.OffsetDateTime;
@@ -46,6 +47,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                 HttpStatus.valueOf(status.value()).getReasonPhrase(),
                                 ex.getMessage());
                 return handleExceptionInternal(ex, apiError, headers, status, request);
+        }
+
+        @ExceptionHandler(InvalidZikresourceException.class)
+        public ResponseEntity<Object> handleInvalidZikresource(InvalidZikresourceException ex, WebRequest request) {
+                ApiError apiError = new ApiError(
+                                OffsetDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                ex.getMessage());
+                return new ResponseEntity<>(apiError, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
         @ExceptionHandler(ZikresourceNotFound.class)

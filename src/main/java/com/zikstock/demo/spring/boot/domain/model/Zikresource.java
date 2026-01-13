@@ -4,15 +4,28 @@ import java.util.List;
 import java.util.UUID;
 
 public record Zikresource(
-    UUID id,
-    String url,
-    String artist,
-    String title,
-    String type,
-    List<Tag> tags,
-    AddedBy addedBy
-) {
-    public record Tag(String label, String value) {}
+        UUID id,
+        String url,
+        String artist,
+        String title,
+        String type,
+        List<Tag> tags,
+        AddedBy addedBy) {
+    public Zikresource {
+        if (url == null || url.isBlank()) {
+            throw new com.zikstock.demo.spring.boot.domain.exception.InvalidZikresourceException("url");
+        }
+        if (artist == null || artist.isBlank()) {
+            throw new com.zikstock.demo.spring.boot.domain.exception.InvalidZikresourceException("artist");
+        }
+        if (title == null || title.isBlank()) {
+            throw new com.zikstock.demo.spring.boot.domain.exception.InvalidZikresourceException("title");
+        }
+    }
 
-    public record AddedBy(String email, String displayName, String link) {}
+    public record Tag(String label, String value) {
+    }
+
+    public record AddedBy(String email, String displayName, String link) {
+    }
 }
