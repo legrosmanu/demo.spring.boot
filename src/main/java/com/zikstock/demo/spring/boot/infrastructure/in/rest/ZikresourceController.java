@@ -9,6 +9,7 @@ import com.zikstock.demo.spring.boot.infrastructure.in.rest.mapper.ZikresourceMa
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +32,7 @@ public class ZikresourceController {
     }
 
     @PostMapping
-    public ResponseEntity<ZikresourceResponse> create(@RequestBody ZikresourceRequest request) {
+    public ResponseEntity<ZikresourceResponse> create(@RequestBody @Valid ZikresourceRequest request) {
         var domainObject = zikresourceMapper.toDomain(request, UUID.randomUUID());
         zikresourceCommand.create(domainObject);
         return new ResponseEntity<>(zikresourceMapper.toResponse(domainObject), HttpStatus.CREATED);
@@ -53,7 +54,8 @@ public class ZikresourceController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ZikresourceResponse> update(@PathVariable UUID id, @RequestBody ZikresourceRequest request) {
+    public ResponseEntity<ZikresourceResponse> update(@PathVariable UUID id,
+            @RequestBody @Valid ZikresourceRequest request) {
         var domainObject = zikresourceMapper.toDomain(request, id);
         zikresourceCommand.update(domainObject);
         return ResponseEntity.ok(zikresourceMapper.toResponse(domainObject));

@@ -214,4 +214,62 @@ class ZikresourceControllerTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
+
+    @Test
+    void should_return_bad_request_when_mandatory_fields_are_missing() {
+        // Given
+        var request = new ZikresourceRequest(
+                "", // Blank URL
+                "", // Blank Artist
+                "", // Blank Title
+                "video",
+                Collections.emptyList(),
+                new AddedByDto("user@test", "User", "/users/1"));
+
+        // When
+        try {
+            restTemplate.postForEntity(baseUrl, request, ZikresourceResponse.class);
+        } catch (HttpClientErrorException.BadRequest ex) {
+            // Then
+            assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            var responseBody = ex
+                    .getResponseBodyAs(com.zikstock.demo.spring.boot.infrastructure.in.rest.exception.ApiError.class);
+            assertThat(responseBody).isNotNull();
+            assertThat(responseBody.status()).isEqualTo(400);
+            assertThat(responseBody.error()).isEqualTo("Bad Request");
+            assertThat(responseBody.message()).contains("url");
+            assertThat(responseBody.message()).contains("artist");
+            assertThat(responseBody.message()).contains("title");
+        }
+    }
+
+    @Test
+    void should_return_bad_request_when_updating_with_missing_mandatory_fields() {
+        // Given
+        var id = java.util.UUID.randomUUID();
+        var request = new ZikresourceRequest(
+                "", // Blank URL
+                "", // Blank Artist
+                "", // Blank Title
+                "video",
+                Collections.emptyList(),
+                new AddedByDto("user@test", "User", "/users/1"));
+        var requestEntity = new HttpEntity<>(request);
+
+        // When
+        try {
+            restTemplate.exchange(baseUrl + "/{id}", HttpMethod.PUT, requestEntity, ZikresourceResponse.class, id);
+        } catch (HttpClientErrorException.BadRequest ex) {
+            // Then
+            assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            var responseBody = ex
+                    .getResponseBodyAs(com.zikstock.demo.spring.boot.infrastructure.in.rest.exception.ApiError.class);
+            assertThat(responseBody).isNotNull();
+            assertThat(responseBody.status()).isEqualTo(400);
+            assertThat(responseBody.error()).isEqualTo("Bad Request");
+            assertThat(responseBody.message()).contains("url");
+            assertThat(responseBody.message()).contains("artist");
+            assertThat(responseBody.message()).contains("title");
+        }
+    }
 }
