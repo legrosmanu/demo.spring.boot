@@ -4,11 +4,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import com.zikstock.demo.spring.boot.domain.exception.ZikresourceNotFound;
 
 import java.time.OffsetDateTime;
 import java.util.stream.Collectors;
@@ -35,7 +38,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         @Override
         protected ResponseEntity<Object> handleHttpMessageNotReadable(
-                        org.springframework.http.converter.HttpMessageNotReadableException ex, HttpHeaders headers,
+                        HttpMessageNotReadableException ex, HttpHeaders headers,
                         HttpStatusCode status, WebRequest request) {
                 ApiError apiError = new ApiError(
                                 OffsetDateTime.now(),
@@ -45,9 +48,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 return handleExceptionInternal(ex, apiError, headers, status, request);
         }
 
-        @ExceptionHandler(com.zikstock.demo.spring.boot.domain.exception.ZikresourceNotFound.class)
-        public ResponseEntity<Object> handleZikresourceNotFound(
-                        com.zikstock.demo.spring.boot.domain.exception.ZikresourceNotFound ex, WebRequest request) {
+        @ExceptionHandler(ZikresourceNotFound.class)
+        public ResponseEntity<Object> handleZikresourceNotFound(ZikresourceNotFound ex, WebRequest request) {
                 ApiError apiError = new ApiError(
                                 OffsetDateTime.now(),
                                 HttpStatus.NOT_FOUND.value(),

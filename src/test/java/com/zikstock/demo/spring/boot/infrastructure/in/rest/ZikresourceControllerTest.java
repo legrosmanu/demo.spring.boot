@@ -189,8 +189,7 @@ class ZikresourceControllerTest {
 
         // When
         try {
-            restTemplate.exchange(baseUrl + "/{id}", HttpMethod.PUT, requestEntity,
-                    ZikresourceResponse.class, id);
+            restTemplate.exchange(baseUrl + "/{id}", HttpMethod.PUT, requestEntity, ZikresourceResponse.class, id);
         } catch (HttpClientErrorException.NotFound ex) {
             // Then
             assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
