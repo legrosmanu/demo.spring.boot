@@ -20,7 +20,10 @@ import org.springframework.web.client.HttpClientErrorException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.springframework.test.context.ActiveProfiles;
+
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 class ZikresourceControllerTest {
 
     @org.springframework.boot.test.web.server.LocalServerPort
